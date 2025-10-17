@@ -37,10 +37,11 @@ export async function getServerSideProps({ params }) {
     if (response && response.blog) {
       console.log("Blog data found:", response.blog);
       console.log("Related books in SSR:", response.blog.related_books);
+      console.log("Related blogs in SSR:", response.blog.related_blogs);
       return {
         props: {
           initialBlog: response.blog,
-          relatedArticles: [],
+          relatedArticles: response.blog.related_blogs || [],
         },
       };
     } else {
@@ -72,13 +73,14 @@ export async function getServerSideProps({ params }) {
 }
 
 // BlogDetailPage component definition starts here
-function BlogDetailPage({ initialBlog = null, relatedArticles = [] }) {
+function BlogDetailPage({ initialBlog = null, relatedArticles: initialRelatedArticles = [] }) {
   const router = useRouter();
   const { slug } = router.query;
   const [blog, setBlog] = useState(initialBlog);
   const [relatedBooks, setRelatedBooks] = useState(
     initialBlog && initialBlog.related_books ? initialBlog.related_books : []
   );
+  const [relatedArticles, setRelatedArticles] = useState(initialRelatedArticles);
   const [loading, setLoading] = useState(!initialBlog); 
   const [error, setError] = useState(null);
   const [tableOfContents, setTableOfContents] = useState([]);
@@ -119,6 +121,19 @@ function BlogDetailPage({ initialBlog = null, relatedArticles = [] }) {
       } else {
         console.log("No related books found in response");
         setRelatedBooks([]);
+      }
+
+      // Set related articles/blogs from the response
+      if (response.blog && response.blog.related_blogs) {
+        console.log("Related blogs found:", response.blog.related_blogs);
+        setRelatedArticles(
+          Array.isArray(response.blog.related_blogs)
+            ? response.blog.related_blogs
+            : []
+        );
+      } else {
+        console.log("No related blogs found in response");
+        setRelatedArticles([]);
       }
 
       setLoading(false);
